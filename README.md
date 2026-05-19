@@ -46,20 +46,20 @@
 
    **requirements.txt content:**
    ```
-   git+https://github.com/huggingface/accelerate.git
-   git+https://github.com/huggingface/diffusers.git
-   git+https://github.com/huggingface/peft.git
-   transformers==4.57.3
-   huggingface_hub
-   sentencepiece
-   torchvision
-   kernels
-   spaces
-   hf_xet
-   gradio #gradio@6.6.0
-   torch
-   numpy
-   av
+    git+https://github.com/huggingface/accelerate.git
+    git+https://github.com/huggingface/diffusers.git
+    git+https://github.com/huggingface/peft.git
+    transformers==4.57.3
+    huggingface_hub
+    sentencepiece
+    torchvision
+    kernels
+    spaces
+    hf_xet
+    gradio
+    torch==2.11.0
+    numpy
+    av
    ```
 
 3. Start the application:
