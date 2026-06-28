@@ -67,7 +67,7 @@ if errorlevel 1 (
 echo.
 echo [OK] Iniciando servidor...
 echo Abriendo http://localhost:7860 en tu navegador...
-"%UV%" run app.py
+"%UV%" run --no-sync app.py
 
 echo.
 echo [INFO] Servidor cerrado (codigo: %ERRORLEVEL%).

@@ -56,7 +56,7 @@ if errorlevel 1 (
 
 echo.
 echo [OK] Iniciando ventana nativa...
-"%UV%" run app.py --desktop
+"%UV%" run --no-sync app.py --desktop
 
 echo.
 echo [INFO] Ventana cerrada (codigo: %ERRORLEVEL%).
