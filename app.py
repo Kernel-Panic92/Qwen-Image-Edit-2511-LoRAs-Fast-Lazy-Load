@@ -96,10 +96,9 @@ pipe = QwenImageEditPlusPipeline.from_pretrained(
     transformer=QwenImageTransformer2DModel.from_pretrained(
         str(TRANSFORMER_DIR),
         torch_dtype=dtype,
-        device_map="cuda" if torch.cuda.is_available() else "cpu",
     ),
     torch_dtype=dtype,
-).to(device)
+)
 
 if torch.cuda.is_available():
     pipe.enable_model_cpu_offload()
