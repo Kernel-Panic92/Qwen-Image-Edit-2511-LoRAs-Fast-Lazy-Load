@@ -3,7 +3,7 @@ import gc
 import sys
 import gradio as gr
 import numpy as np
-import spaces
+
 import torch
 import random
 import base64
@@ -29,6 +29,18 @@ if torch.cuda.is_available():
 
 print("Using device:", device)
 
+if not torch.cuda.is_available():
+    print("")
+    print("=== IMPORTANTE ===")
+    print("CUDA no disponible. PyTorch se instalo sin soporte CUDA.")
+    print("Esto puede deberse a que no tienes los drivers NVIDIA instalados")
+    print("o porque se instalo la version CPU de PyTorch.")
+    print("")
+    print("El programa funcionara en CPU (MUY lento).")
+    print("Para aceleracion GPU, instala los drivers NVIDIA CUDA.")
+    print("==================")
+    print("")
+
 # ── Detect packaged environment ──────────────────────────────────────────
 APP_ROOT = Path(__file__).resolve().parent
 IS_PACKAGED = (APP_ROOT / "uv.exe").exists()
@@ -52,21 +64,29 @@ from qwenimage.pipeline_qwenimage_edit_plus import QwenImageEditPlusPipeline
 from qwenimage.transformer_qwenimage import QwenImageTransformer2DModel
 from qwenimage.qwen_fa3_processor import QwenDoubleStreamAttnProcessorFA3
 
-dtype = torch.float16 if torch.cuda.get_device_capability()[0] < 8 else torch.bfloat16
+if torch.cuda.is_available():
+    cap = torch.cuda.get_device_capability()
+    dtype = torch.float16 if cap[0] < 8 else torch.bfloat16
+else:
+    dtype = torch.float32
 
 pipe = QwenImageEditPlusPipeline.from_pretrained(
     "Qwen/Qwen-Image-Edit-2511",
     transformer=QwenImageTransformer2DModel.from_pretrained(
         "prithivMLmods/Qwen-Image-Edit-Rapid-AIO-V19",
         torch_dtype=dtype,
-        device_map="cuda",
+        device_map="cuda" if torch.cuda.is_available() else "cpu",
     ),
     torch_dtype=dtype,
 ).to(device)
 
-pipe.enable_model_cpu_offload()
-pipe.enable_attention_slicing()
-if torch.cuda.get_device_capability()[0] < 7:
+if torch.cuda.is_available():
+    pipe.enable_model_cpu_offload()
+    pipe.enable_attention_slicing()
+    if torch.cuda.get_device_capability()[0] < 7:
+        pipe.vae.enable_tiling()
+else:
+    pipe.enable_attention_slicing()
     pipe.vae.enable_tiling()
 
 try:
@@ -314,7 +334,6 @@ def update_dimensions_on_upload(image):
     return (nw // 8) * 8, (nh // 8) * 8
 
 
-@spaces.GPU(size="xlarge")
 def infer(
     images_b64_json,
     prompt,
@@ -326,7 +345,8 @@ def infer(
     progress=gr.Progress(track_tqdm=True),
 ):
     gc.collect()
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     pil_images = b64_to_pil_list(images_b64_json)
     if not pil_images:
@@ -377,7 +397,8 @@ def infer(
         raise e
     finally:
         gc.collect()
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 
 css = r"""
