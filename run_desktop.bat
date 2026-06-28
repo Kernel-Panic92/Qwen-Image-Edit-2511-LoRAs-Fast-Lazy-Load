@@ -1,22 +1,19 @@
 @echo off
-chcp 65001 >nul
 title Qwen-Image-Edit (Desktop)
-
 cd /d "%~dp0"
 
 echo.
-echo [93m╔══════════════════════════════════════════════════╗[0m
-echo [93m║    Qwen-Image-Edit - Desktop Native Window      ║[0m
-echo [93m╚══════════════════════════════════════════════════╝[0m
+echo === Qwen-Image-Edit - Desktop Native Window ===
 echo.
 
-:: Use bundled uv.exe if available (installed mode), otherwise search PATH
-set "UV=uv.exe"
+:: Use bundled uv.exe if available, otherwise search PATH
+set "UV="
 if exist "%~dp0uv.exe" set "UV=%~dp0uv.exe"
-
-where "%UV%" >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo [91m[ERROR] uv no encontrado.[0m
+if not defined UV (
+    where uv.exe >nul 2>&1 && set "UV=uv.exe"
+)
+if not defined UV (
+    echo [ERROR] uv no encontrado.
     echo.
     echo Instalalo con:
     echo   powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
@@ -25,42 +22,41 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: Check if virtual env exists and is synced
+:: First run - install dependencies
 if not exist ".venv" (
-    echo [93m[..] Primera ejecucion - instalando dependencias...[0m
-    echo [93m[..] Esto puede tomar varios minutos (PyTorch ~3GB).[0m
+    echo [..] Primera ejecucion - instalando dependencias...
+    echo [..] Esto puede tomar varios minutos (PyTorch ~3GB).
     echo.
     "%UV%" sync
-    if %ERRORLEVEL% neq 0 (
-        echo [91m[ERROR] Fallo al instalar dependencias.[0m
+    if errorlevel 1 (
+        echo [ERROR] Fallo al instalar dependencias.
         pause
         exit /b 1
     )
-    echo [92m[OK] Dependencias instaladas.[0m
+    echo [OK] Dependencias instaladas.
     echo.
 )
 
 :: Ensure pywebview is installed
 "%UV%" run python -c "import webview" 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo [93m[..] Instalando pywebview para modo desktop...[0m
+if errorlevel 1 (
+    echo [..] Instalando pywebview para modo desktop...
     "%UV%" add pywebview
-    if %ERRORLEVEL% neq 0 (
-        echo [91m[ERROR] Fallo al instalar pywebview.[0m
+    if errorlevel 1 (
+        echo [ERROR] Fallo al instalar pywebview.
         pause
         exit /b 1
     )
 )
 
-echo [92m[OK] Iniciando aplicacion en ventana nativa...[0m
-echo.
-echo [90mCierra la ventana para detener la aplicacion.[0m
+echo [OK] Iniciando aplicacion en ventana nativa...
+echo Cierra la ventana para detener la aplicacion.
 echo.
 
 "%UV%" run app.py --desktop
 
-if %ERRORLEVEL% neq 0 (
+if errorlevel 1 (
     echo.
-    echo [91m[ERROR] La aplicacion termino con error.[0m
+    echo [ERROR] La aplicacion termino con error.
     pause
 )
