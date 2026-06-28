@@ -239,7 +239,7 @@ for _name, _spec in ADAPTER_SPECS.items():
             _adapter_dir.mkdir(parents=True, exist_ok=True)
             hf_hub_download(
                 _spec["repo"],
-                weight_name=_spec["weights"],
+                filename=_spec["weights"],
                 local_dir=str(_adapter_dir),
             )
         else:
