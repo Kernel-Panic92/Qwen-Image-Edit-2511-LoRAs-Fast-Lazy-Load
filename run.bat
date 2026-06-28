@@ -20,8 +20,22 @@ if not defined UV (
 )
 echo [OK] uv: %UV%
 
-:: Ensure Python 3.12
-"%UV%" python install 3.12 2>nul
+:: Check Python 3.12
+"%UV%" run python --version
+if errorlevel 1 (
+    echo [..] Instalando Python 3.12...
+    "%UV%" python install 3.12 --force
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] No se pudo instalar Python.
+        echo.
+        echo Posible solucion: borra la carpeta de uv y reintenta:
+        echo   rmdir /s /q "%APPDATA%\uv\python"
+        echo.
+        pause
+        exit /b 1
+    )
+)
 
 :: Install project dependencies
 echo.
@@ -33,11 +47,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: Ensure CUDA-enabled PyTorch (override CPU-only from PyPI)
+:: Ensure CUDA PyTorch (force reinstall from PyTorch index)
 "%UV%" run python -c "import torch; torch.cuda.current_device()" >nul 2>&1
 if errorlevel 1 (
     echo [..] Instalando PyTorch con CUDA...
     "%UV%" pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
+    if errorlevel 1 (
+        echo [ADVERTENCIA] No se pudo instalar PyTorch con CUDA.
+        echo La aplicacion funcionara en CPU (muy lento).
+    )
 )
 
 echo.
