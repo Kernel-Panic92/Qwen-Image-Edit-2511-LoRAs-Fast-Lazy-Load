@@ -223,6 +223,31 @@ ADAPTER_SPECS = {
 LOADED_ADAPTERS: set = set()
 ADAPTER_NAMES = list(ADAPTER_SPECS.keys())
 
+# ── Pre-download all LoRA adapters to local cache ─────────────────────────
+from huggingface_hub import hf_hub_download
+
+LORA_CACHE = MODELS_DIR / "loras"
+LORA_CACHE.mkdir(exist_ok=True)
+
+print("Pre-downloading LoRA adapters...")
+for _name, _spec in ADAPTER_SPECS.items():
+    try:
+        _adapter_dir = LORA_CACHE / _spec["adapter_name"]
+        _weight_path = _adapter_dir / _spec["weights"]
+        if not _weight_path.exists():
+            print(f"  Downloading {_name}...")
+            _adapter_dir.mkdir(parents=True, exist_ok=True)
+            hf_hub_download(
+                _spec["repo"],
+                weight_name=_spec["weights"],
+                local_dir=str(_adapter_dir),
+            )
+        else:
+            print(f"  {_name} already cached.")
+    except Exception as e:
+        print(f"  [WARN] Failed to download {_name}: {e}")
+print("LoRA pre-download complete.")
+
 EXAMPLES_CONFIG = [
     {"images": ["examples/B.jpg"],                          "prompt": "Transform into anime.",                                                                                           "lora": "Photo-to-Anime"},
     {"images": ["examples/HRP.jpg"],                        "prompt": "Transform into a hyper-realistic face portrait.",                                                                 "lora": "Hyper-Realistic-Portrait"},
@@ -387,9 +412,10 @@ def infer(
 
     adapter_name = spec["adapter_name"]
     if adapter_name not in LOADED_ADAPTERS:
-        print(f"--- Downloading and Loading Adapter: {lora_adapter} ---")
+        print(f"--- Loading Adapter: {lora_adapter} ---")
         try:
-            pipe.load_lora_weights(spec["repo"], weight_name=spec["weights"], adapter_name=adapter_name)
+            local_path = str(LORA_CACHE / adapter_name)
+            pipe.load_lora_weights(local_path, weight_name=spec["weights"], adapter_name=adapter_name)
             LOADED_ADAPTERS.add(adapter_name)
         except Exception as e:
             raise gr.Error(f"Failed to load adapter {lora_adapter}: {e}")
