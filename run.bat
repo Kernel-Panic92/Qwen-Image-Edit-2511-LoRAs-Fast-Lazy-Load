@@ -18,8 +18,8 @@ if not defined UV (
 )
 echo [OK] uv: %UV%
 
-:: Use local Python dir (avoids corrupted %APPDATA%\uv\python)
-set "UV_PYTHON_INSTALL_DIR=%~dp0.uv_python"
+:: Use %USERPROFILE% for Python dir (AppData has untrusted mount point error 448)
+set "UV_PYTHON_INSTALL_DIR=%USERPROFILE%\.qwen_uv_python"
 
 :: Ensure Python 3.12 (system may have 3.14, too new for CUDA torch wheels)
 "%UV%" python install 3.12 --force
