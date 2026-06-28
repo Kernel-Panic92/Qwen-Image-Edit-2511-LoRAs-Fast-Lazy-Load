@@ -23,10 +23,11 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 
-; Default to per-user install (no admin required)
-DefaultDirName={autopf64}\{#MyAppName}
+; Install to C:\Qwen-Image-Edit (avoids AppData filesystem restrictions)
+DefaultDirName=C:\{#MyAppName}
 DefaultGroupName={#MyAppName}
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
+PrivilegesRequiredOverridesAllowed=dialog
 OutputBaseFilename=Qwen-Image-Edit-Setup-{#MyAppVersion}
 
 OutputDir=output
@@ -101,5 +102,7 @@ Filename: "{app}\{#MyAppExec}"; Description: "Ejecutar {#MyAppName} ahora"; Flag
 [UninstallRun]
 ; Clean up virtual environment to free space
 Filename: "{cmd}"; Parameters: "/C rmdir /S /Q ""{app}\.venv"""; Flags: runhidden
+; Clean up HF cache
+Filename: "{cmd}"; Parameters: "/C rmdir /S /Q ""{app}\.hf_cache"""; Flags: runhidden
 
 [Code]
