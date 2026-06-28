@@ -101,11 +101,13 @@ print("Loading transformer...")
 transformer = QwenImageTransformer2DModel.from_pretrained(
     str(TRANSFORMER_DIR),
 )
+print(f"Transformer dtype: {transformer.dtype}")
 
 pipe = QwenImageEditPlusPipeline.from_pretrained(
     str(PIPELINE_DIR),
     transformer=transformer,
 )
+print(f"Pipeline dtype: {pipe.dtype}")
 
 if torch.cuda.is_available():
     pipe.enable_sequential_cpu_offload()
