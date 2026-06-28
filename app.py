@@ -3,6 +3,13 @@ import gc
 import sys
 from pathlib import Path
 
+# ── Force UTF-8 on Windows (fixes Chinese characters in LoRA filenames) ──
+os.environ["PYTHONUTF8"] = "1"
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
 # ── App root setup ────────────────────────────────────────────────────────
 APP_ROOT = Path(__file__).resolve().parent
 IS_PACKAGED = (APP_ROOT / "uv.exe").exists()
