@@ -21,32 +21,37 @@ echo [OK] uv: %UV%
 :: Use local Python dir (avoids corrupted %APPDATA%\uv\python)
 set "UV_PYTHON_INSTALL_DIR=%~dp0.uv_python"
 
-:: Install deps (creates .venv + downloads packages)
+:: Ensure Python 3.12 (system may have 3.14, too new for CUDA torch wheels)
+"%UV%" python install 3.12 --force
+
+:: Check if .venv was created with wrong Python version
+if exist ".venv\pyvenv.cfg" (
+    findstr /c:"version = 3.12" ".venv\pyvenv.cfg" >nul 2>&1
+    if errorlevel 1 (
+        echo [..] Recreando entorno con Python 3.12...
+        rmdir /s /q ".venv"
+    )
+)
+
+:: Install project dependencies
 echo.
 echo [..] Instalando dependencias...
-"%UV%" sync
-if errorlevel 1 (
-    echo [..] Python no disponible. Instalando Python 3.12...
-    "%UV%" python install 3.12
-    if errorlevel 1 (
-        echo [ERROR] No se pudo instalar Python.
-        echo Instalalo manualmente: https://www.python.org/downloads/
-        pause
-        exit /b 1
-    )
+if not exist ".venv" (
+    "%UV%" sync --python 3.12
+) else (
     "%UV%" sync
-    if errorlevel 1 (
-        echo [ERROR] Fallo al instalar dependencias.
-        pause
-        exit /b 1
-    )
+)
+if errorlevel 1 (
+    echo [ERROR] Fallo al instalar dependencias.
+    pause
+    exit /b 1
 )
 
 :: Replace CPU PyTorch with CUDA version
 "%UV%" run python -c "import torch; torch.cuda.current_device()" >nul 2>&1
 if errorlevel 1 (
     echo [..] Instalando PyTorch con CUDA...
-    "%UV%" pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
+    "%UV%" pip install --python 3.12 torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
     if errorlevel 1 (
         echo [AVISO] No se pudo instalar PyTorch CUDA. Usando CPU.
     )
