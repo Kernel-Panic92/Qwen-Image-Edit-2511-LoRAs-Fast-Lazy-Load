@@ -68,6 +68,15 @@ from qwenimage.pipeline_qwenimage_edit_plus import QwenImageEditPlusPipeline
 from qwenimage.transformer_qwenimage import QwenImageTransformer2DModel
 from qwenimage.qwen_fa3_processor import QwenDoubleStreamAttnProcessorFA3
 
+# ── Force disable HF symlinks (Windows blocks them with error 448) ───────
+import huggingface_hub.constants
+huggingface_hub.constants.HF_HUB_DISABLE_SYMLINKS = True
+try:
+    import huggingface_hub.file_download
+    huggingface_hub.file_download.HF_HUB_DISABLE_SYMLINKS = True
+except (ImportError, AttributeError):
+    pass
+
 # ── Diagnostic: test file I/O before model loading ───────────────────────
 if IS_PACKAGED:
     print("─" * 60)
