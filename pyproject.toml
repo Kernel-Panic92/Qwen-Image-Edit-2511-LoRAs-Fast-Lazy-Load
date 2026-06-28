@@ -23,10 +23,6 @@ dependencies = [
 [project.optional-dependencies]
 desktop = ["pywebview>=5"]
 
-[tool.uv]
-index-url = "https://download.pytorch.org/whl/cu124"
-extra-index-url = ["https://pypi.org/simple"]
-
 [tool.uv.sources]
 accelerate = { git = "https://github.com/huggingface/accelerate.git" }
 diffusers = { git = "https://github.com/huggingface/diffusers.git" }

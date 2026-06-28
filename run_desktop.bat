@@ -6,7 +6,7 @@ echo.
 echo === Qwen-Image-Edit - Desktop Native Window ===
 echo.
 
-:: Use bundled uv.exe if available, otherwise search PATH
+:: Find uv
 set "UV="
 if exist "%~dp0uv.exe" set "UV=%~dp0uv.exe"
 if not defined UV (
@@ -14,27 +14,30 @@ if not defined UV (
 )
 if not defined UV (
     echo [ERROR] uv no encontrado.
-    echo.
-    echo Instalalo con:
-    echo   powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
-    echo.
+    echo Instalalo con: powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
+    pause
+    exit /b 1
+)
+echo [OK] uv: %UV%
+
+:: Ensure Python 3.12
+"%UV%" python install 3.12 2>nul
+
+:: Install project dependencies
+echo.
+echo [..] Instalando dependencias...
+"%UV%" sync
+if errorlevel 1 (
+    echo [ERROR] Fallo al instalar dependencias.
     pause
     exit /b 1
 )
 
-:: First run - install dependencies
-if not exist ".venv" (
-    echo [..] Primera ejecucion - instalando dependencias...
-    echo [..] Esto puede tomar varios minutos (PyTorch ~3GB).
-    echo.
-    "%UV%" sync
-    if errorlevel 1 (
-        echo [ERROR] Fallo al instalar dependencias.
-        pause
-        exit /b 1
-    )
-    echo [OK] Dependencias instaladas.
-    echo.
+:: Ensure CUDA-enabled PyTorch (override CPU-only from PyPI)
+"%UV%" run python -c "import torch; torch.cuda.current_device()" >nul 2>&1
+if errorlevel 1 (
+    echo [..] Instalando PyTorch con CUDA...
+    "%UV%" pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
 )
 
 :: Ensure pywebview is installed
@@ -49,14 +52,13 @@ if errorlevel 1 (
     )
 )
 
+echo.
 echo [OK] Iniciando aplicacion en ventana nativa...
 echo Cierra la ventana para detener la aplicacion.
 echo.
 
 "%UV%" run app.py --desktop
 
-if errorlevel 1 (
-    echo.
-    echo [ERROR] La aplicacion termino con error.
-    pause
-)
+echo.
+echo [INFO] Servidor cerrado (codigo: %ERRORLEVEL%).
+pause

@@ -14,39 +14,30 @@ if not defined UV (
 )
 if not defined UV (
     echo [ERROR] uv no encontrado.
-    echo Instalalo con:
-    echo   powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
+    echo Instalalo con: powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
     pause
     exit /b 1
 )
 echo [OK] uv: %UV%
 
-:: Check / install Python
-"%UV%" run python --version
+:: Ensure Python 3.12
+"%UV%" python install 3.12 2>nul
+
+:: Install project dependencies
+echo.
+echo [..] Instalando dependencias...
+"%UV%" sync
 if errorlevel 1 (
-    echo [..] Instalando Python 3.12...
-    "%UV%" python install 3.12
-    if errorlevel 1 (
-        echo [ERROR] No se pudo instalar Python.
-        pause
-        exit /b 1
-    )
+    echo [ERROR] Fallo al instalar dependencias.
+    pause
+    exit /b 1
 )
 
-:: Install deps if needed
-if not exist ".venv" (
-    echo.
-    echo [..] Primera ejecucion - instalando dependencias...
-    echo [..] Esto puede tomar varios minutos (PyTorch ~3GB)
-    echo.
-    "%UV%" sync
-    if errorlevel 1 (
-        echo [ERROR] Fallo al instalar dependencias.
-        pause
-        exit /b 1
-    )
-    echo.
-    echo [OK] Dependencias instaladas.
+:: Ensure CUDA-enabled PyTorch (override CPU-only from PyPI)
+"%UV%" run python -c "import torch; torch.cuda.current_device()" >nul 2>&1
+if errorlevel 1 (
+    echo [..] Instalando PyTorch con CUDA...
+    "%UV%" pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
 )
 
 echo.
