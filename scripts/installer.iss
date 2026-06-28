@@ -80,6 +80,9 @@ Source: "..\examples\*.jpeg"; DestDir: "{app}\examples"; Flags: ignoreversion
 ; uv binary (downloaded by build script)
 Source: "redist\uv.exe"; DestDir: "{app}"; Flags: ignoreversion
 
+; Python 3.12 installer (needed for CUDA PyTorch wheels)
+Source: "redist\python-3.12.5-amd64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+
 ; Launchers
 Source: "..\run.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\run_desktop.bat"; DestDir: "{app}"; Flags: ignoreversion
@@ -96,6 +99,9 @@ Name: "{autodesktop}\{#MyAppName} (Ventana Nativa)"; Filename: "{app}\run_deskto
 Name: "{autoprograms}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Run]
+; Install Python 3.12 silently (needed for CUDA PyTorch)
+Filename: "{tmp}\python-3.12.5-amd64.exe"; Parameters: "/quiet InstallAllUsers=1 PrependPath=0 Include_test=0 TargetDir=C:\Python312"; StatusMsg: "Instalando Python 3.12 para soporte GPU..."; Flags: runhidden waituntilterminated
+
 ; Run the app after install (user checkbox)
 Filename: "{app}\{#MyAppExec}"; Description: "Ejecutar {#MyAppName} ahora"; Flags: postinstall nowait skipifsilent shellexec
 

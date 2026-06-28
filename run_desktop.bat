@@ -12,41 +12,39 @@ if exist "%~dp0uv.exe" set "UV=%~dp0uv.exe"
 if not defined UV where uv.exe >nul 2>&1 && set "UV=uv.exe"
 if not defined UV (
     echo [ERROR] uv no encontrado.
-    echo Instalalo con: powershell -c "irm https://astral.sh/uv/install.ps1 ^| iex"
+    echo.
     pause
     exit /b 1
 )
 echo [OK] uv: %UV%
 
-:: Install deps
+:: Find Python 3.12
+set "PYTHON="
+if exist "C:\Python312\python.exe" set "PYTHON=C:\Python312\python.exe"
+if not defined PYTHON if exist "C:\Python312\python3.exe" set "PYTHON=C:\Python312\python3.exe"
+if not defined PYTHON (
+    echo [ERROR] Python 3.12 no encontrado en C:\Python312
+    pause
+    exit /b 1
+)
+echo [OK] Python: %PYTHON%
+
+:: Create venv if needed
+if not exist ".venv" (
+    echo [..] Creando entorno virtual con Python 3.12...
+    "%UV%" venv --python "%PYTHON%"
+)
+
+:: Install dependencies
 echo.
 echo [..] Instalando dependencias...
 "%UV%" sync
-if errorlevel 1 (
-    echo [..] Python no disponible. Instalando Python 3.12...
-    "%UV%" python install 3.12
-    if errorlevel 1 (
-        echo [ERROR] No se pudo instalar Python.
-        echo Instalalo manualmente: https://www.python.org/downloads/
-        pause
-        exit /b 1
-    )
-    "%UV%" sync
-    if errorlevel 1 (
-        echo [ERROR] Fallo al instalar dependencias.
-        pause
-        exit /b 1
-    )
-)
 
-:: Replace CPU PyTorch with CUDA version
+:: Install CUDA PyTorch
 "%UV%" run python -c "import torch; torch.cuda.current_device()" >nul 2>&1
 if errorlevel 1 (
     echo [..] Instalando PyTorch con CUDA...
     "%UV%" pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-deps
-    if errorlevel 1 (
-        echo [AVISO] No se pudo instalar PyTorch CUDA. Usando CPU.
-    )
 )
 
 :: Install pywebview if needed
