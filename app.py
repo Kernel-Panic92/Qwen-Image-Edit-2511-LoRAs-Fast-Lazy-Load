@@ -40,6 +40,7 @@ if not torch.cuda.is_available():
     print("Para aceleracion GPU, instala los drivers NVIDIA CUDA.")
     print("==================")
     print("")
+    gc.collect()
 
 # ── Detect packaged environment ──────────────────────────────────────────
 APP_ROOT = Path(__file__).resolve().parent
@@ -68,7 +69,8 @@ if torch.cuda.is_available():
     cap = torch.cuda.get_device_capability()
     dtype = torch.float16 if cap[0] < 8 else torch.bfloat16
 else:
-    dtype = torch.float32
+    dtype = torch.bfloat16
+    gc.collect()
 
 pipe = QwenImageEditPlusPipeline.from_pretrained(
     "Qwen/Qwen-Image-Edit-2511",
