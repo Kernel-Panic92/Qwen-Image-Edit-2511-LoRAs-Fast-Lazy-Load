@@ -20,17 +20,20 @@ if not defined UV (
 )
 echo [OK] uv: %UV%
 
-:: Check Python 3.12
+:: Check Python 3.12 - use local dir to avoid broken %APPDATA%\uv\python
+set "UV_PYTHON_INSTALL_DIR=%~dp0.uv_python"
+if not exist "%UV_PYTHON_INSTALL_DIR%" mkdir "%UV_PYTHON_INSTALL_DIR%"
 "%UV%" run python --version
 if errorlevel 1 (
     echo [..] Instalando Python 3.12...
-    "%UV%" python install 3.12 --force
+    "%UV%" python install 3.12
     if errorlevel 1 (
         echo.
         echo [ERROR] No se pudo instalar Python.
         echo.
-        echo Posible solucion: borra la carpeta de uv y reintenta:
-        echo   rmdir /s /q "%APPDATA%\uv\python"
+        echo Asegurate de tener Python 3.12 instalado en el sistema:
+        echo   https://www.python.org/downloads/
+        echo O desconecta OneDrive/antivirus y reintenta.
         echo.
         pause
         exit /b 1
