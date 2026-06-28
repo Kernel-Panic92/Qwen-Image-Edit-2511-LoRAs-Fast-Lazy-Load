@@ -108,7 +108,7 @@ pipe = QwenImageEditPlusPipeline.from_pretrained(
 )
 
 if torch.cuda.is_available():
-    pipe.enable_model_cpu_offload()
+    pipe.enable_sequential_cpu_offload()
     pipe.enable_attention_slicing()
     if torch.cuda.get_device_capability()[0] < 7:
         pipe.vae.enable_tiling()
