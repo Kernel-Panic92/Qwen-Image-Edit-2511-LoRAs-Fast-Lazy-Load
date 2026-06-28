@@ -1753,6 +1753,7 @@ if __name__ == "__main__":
     else:
         import webbrowser
         PORT = 7860
+        webbrowser.open(f"http://127.0.0.1:{PORT}")
         demo.queue(max_size=50).launch(
             server_port=PORT,
             css=css,
@@ -1760,6 +1761,4 @@ if __name__ == "__main__":
             ssr_mode=False,
             show_error=True,
             allowed_paths=["examples"],
-            prevent_thread_lock=True,
         )
-        webbrowser.open(f"http://127.0.0.1:{PORT}")
