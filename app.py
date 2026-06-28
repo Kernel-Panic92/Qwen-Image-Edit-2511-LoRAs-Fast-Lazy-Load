@@ -1,6 +1,22 @@
 import os
 import gc
 import sys
+from pathlib import Path
+
+# ── Set HF cache BEFORE any imports (torch/gradio init HF early) ──────────
+APP_ROOT = Path(__file__).resolve().parent
+IS_PACKAGED = (APP_ROOT / "uv.exe").exists()
+if IS_PACKAGED:
+    hf_cache = APP_ROOT / ".hf_cache"
+    hf_cache.mkdir(exist_ok=True)
+    os.environ["HF_HOME"] = str(hf_cache)
+    os.environ["HF_HUB_CACHE"] = str(hf_cache / "hub")
+    os.environ["HUGGINGFACE_HUB_CACHE"] = str(hf_cache / "hub")
+    os.environ["TRANSFORMERS_CACHE"] = str(hf_cache / "hub")
+    os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
+    if str(APP_ROOT) not in sys.path:
+        sys.path.insert(0, str(APP_ROOT))
+
 import gradio as gr
 import numpy as np
 
@@ -10,7 +26,6 @@ import base64
 import json
 import html as html_lib
 from io import BytesIO
-from pathlib import Path
 from PIL import Image
 
 MAX_SEED = np.iinfo(np.int32).max
@@ -42,20 +57,8 @@ if not torch.cuda.is_available():
     print("")
     gc.collect()
 
-# ── Detect packaged environment ──────────────────────────────────────────
-APP_ROOT = Path(__file__).resolve().parent
-IS_PACKAGED = (APP_ROOT / "uv.exe").exists()
 if IS_PACKAGED:
     print("Packaged mode detected (uv.exe present in app directory).")
-    # Ensure the app root is in path so 'qwenimage' package resolves
-    if str(APP_ROOT) not in sys.path:
-        sys.path.insert(0, str(APP_ROOT))
-    # Use a stable location for HuggingFace cache (avoid long paths / spaces)
-    hf_cache = APP_ROOT / ".hf_cache"
-    hf_cache.mkdir(exist_ok=True)
-    os.environ.setdefault("HF_HOME", str(hf_cache))
-    os.environ.setdefault("HUGGINGFACE_HUB_CACHE", str(hf_cache / "hub"))
-    os.environ.setdefault("TRANSFORMERS_CACHE", str(hf_cache / "hub"))
     print(f"HF cache dir: {hf_cache}")
 else:
     print("Development mode (no uv.exe found).")
