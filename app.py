@@ -3,19 +3,16 @@ import gc
 import sys
 from pathlib import Path
 
-# ── Set HF cache BEFORE any imports (torch/gradio init HF early) ──────────
+# ── App root setup ────────────────────────────────────────────────────────
 APP_ROOT = Path(__file__).resolve().parent
 IS_PACKAGED = (APP_ROOT / "uv.exe").exists()
-if IS_PACKAGED:
-    hf_cache = APP_ROOT / ".hf_cache"
-    hf_cache.mkdir(exist_ok=True)
-    os.environ["HF_HOME"] = str(hf_cache)
-    os.environ["HF_HUB_CACHE"] = str(hf_cache / "hub")
-    os.environ["HUGGINGFACE_HUB_CACHE"] = str(hf_cache / "hub")
-    os.environ["TRANSFORMERS_CACHE"] = str(hf_cache / "hub")
-    os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
-    if str(APP_ROOT) not in sys.path:
-        sys.path.insert(0, str(APP_ROOT))
+if IS_PACKAGED and str(APP_ROOT) not in sys.path:
+    sys.path.insert(0, str(APP_ROOT))
+
+# ── Local model directories (bypass HF cache / symlinks) ─────────────────
+MODELS_DIR = APP_ROOT / "models"
+TRANSFORMER_DIR = MODELS_DIR / "transformer"
+PIPELINE_DIR = MODELS_DIR / "pipeline"
 
 import gradio as gr
 import numpy as np
@@ -59,59 +56,14 @@ if not torch.cuda.is_available():
 
 if IS_PACKAGED:
     print("Packaged mode detected (uv.exe present in app directory).")
-    print(f"HF cache dir: {hf_cache}")
 else:
     print("Development mode (no uv.exe found).")
 
+from huggingface_hub import snapshot_download
 from diffusers import FlowMatchEulerDiscreteScheduler
 from qwenimage.pipeline_qwenimage_edit_plus import QwenImageEditPlusPipeline
 from qwenimage.transformer_qwenimage import QwenImageTransformer2DModel
 from qwenimage.qwen_fa3_processor import QwenDoubleStreamAttnProcessorFA3
-
-# ── Force disable HF symlinks (Windows blocks them with error 448) ───────
-import huggingface_hub.constants
-huggingface_hub.constants.HF_HUB_DISABLE_SYMLINKS = True
-try:
-    import huggingface_hub.file_download
-    huggingface_hub.file_download.HF_HUB_DISABLE_SYMLINKS = True
-except (ImportError, AttributeError):
-    pass
-
-# ── Diagnostic: test file I/O before model loading ───────────────────────
-if IS_PACKAGED:
-    print("─" * 60)
-    print("FILE I/O DIAGNOSTIC")
-    print("─" * 60)
-    hub_cache = hf_cache / "hub"
-    hub_cache.mkdir(parents=True, exist_ok=True)
-
-    # Test 1: basic write/read
-    test_path = hub_cache / "test_io.txt"
-    try:
-        test_path.write_text("hello", encoding="utf-8")
-        content = test_path.read_text(encoding="utf-8")
-        print(f"  Basic I/O: OK ('{content}')")
-        test_path.unlink()
-    except Exception as e:
-        print(f"  Basic I/O: FAILED ({e})")
-
-    # Test 2: check downloaded config.json
-    config_candidates = list(hub_cache.glob("models--*/snapshots/*/config.json"))
-    for cp in config_candidates:
-        print(f"  Found: {cp}")
-        print(f"    Exists: {cp.exists()}")
-        print(f"    Is file: {cp.is_file()}")
-        print(f"    Is symlink: {cp.is_symlink()}")
-        print(f"    Size: {cp.stat().st_size if cp.exists() else 'N/A'}")
-        if cp.is_symlink():
-            print(f"    Symlink target: {os.readlink(cp)}")
-            print(f"    Target exists: {cp.resolve().exists()}")
-        try:
-            with open(str(cp), "r", encoding="utf-8") as f:
-                print(f"    open() OK: {f.read(50)}")
-        except Exception as e:
-            print(f"    open() FAILED: {type(e).__name__}: {e}")
-    print("─" * 60)
 
 if torch.cuda.is_available():
     cap = torch.cuda.get_device_capability()
@@ -120,10 +72,29 @@ else:
     dtype = torch.bfloat16
     gc.collect()
 
+# ── Download models to local dirs (bypass HF cache symlinks) ─────────────
+TRANSFORMER_REPO = "prithivMLmods/Qwen-Image-Edit-Rapid-AIO-V19"
+PIPELINE_REPO = "Qwen/Qwen-Image-Edit-2511"
+
+print(f"Models dir: {MODELS_DIR}")
+
+if not TRANSFORMER_DIR.exists():
+    print(f"Downloading transformer model to {TRANSFORMER_DIR}...")
+    snapshot_download(TRANSFORMER_REPO, local_dir=str(TRANSFORMER_DIR))
+else:
+    print("Transformer model already downloaded.")
+
+if not PIPELINE_DIR.exists():
+    print(f"Downloading pipeline model to {PIPELINE_DIR}...")
+    snapshot_download(PIPELINE_REPO, local_dir=str(PIPELINE_DIR))
+else:
+    print("Pipeline model already downloaded.")
+
+print("Loading transformer...")
 pipe = QwenImageEditPlusPipeline.from_pretrained(
-    "Qwen/Qwen-Image-Edit-2511",
+    str(PIPELINE_DIR),
     transformer=QwenImageTransformer2DModel.from_pretrained(
-        "prithivMLmods/Qwen-Image-Edit-Rapid-AIO-V19",
+        str(TRANSFORMER_DIR),
         torch_dtype=dtype,
         device_map="cuda" if torch.cuda.is_available() else "cpu",
     ),
