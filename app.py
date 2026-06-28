@@ -371,7 +371,7 @@ def b64_to_pil_list(b64_json_str):
     return pil_images
 
 
-MAX_EDGE = int(os.environ.get("QWEN_MAX_EDGE", "768"))
+MAX_EDGE = int(os.environ.get("QWEN_MAX_EDGE", "512"))
 
 def update_dimensions_on_upload(image):
     if image is None:
