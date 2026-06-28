@@ -98,31 +98,13 @@ else:
     print("Pipeline model already downloaded.")
 
 print("Loading transformer...")
-try:
-    from transformers import BitsAndBytesConfig
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
-    )
-    transformer = QwenImageTransformer2DModel.from_pretrained(
-        str(TRANSFORMER_DIR),
-        torch_dtype=dtype,
-        quantization_config=bnb_config,
-    )
-    print("Transformer loaded with 4-bit quantization.")
-except Exception as e:
-    print(f"4-bit quantization failed ({e}), loading without...")
-    transformer = QwenImageTransformer2DModel.from_pretrained(
-        str(TRANSFORMER_DIR),
-        torch_dtype=dtype,
-    )
+transformer = QwenImageTransformer2DModel.from_pretrained(
+    str(TRANSFORMER_DIR),
+)
 
 pipe = QwenImageEditPlusPipeline.from_pretrained(
     str(PIPELINE_DIR),
     transformer=transformer,
-    torch_dtype=dtype,
 )
 
 if torch.cuda.is_available():
