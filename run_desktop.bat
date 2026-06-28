@@ -10,8 +10,11 @@ echo [93m║    Qwen-Image-Edit - Desktop Native Window      ║[0m
 echo [93m╚══════════════════════════════════════════════════╝[0m
 echo.
 
-:: Check if uv is available
-where uv >nul 2>&1
+:: Use bundled uv.exe if available (installed mode), otherwise search PATH
+set "UV=uv.exe"
+if exist "%~dp0uv.exe" set "UV=%~dp0uv.exe"
+
+where "%UV%" >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo [91m[ERROR] uv no encontrado.[0m
     echo.
@@ -27,7 +30,7 @@ if not exist ".venv" (
     echo [93m[..] Primera ejecucion - instalando dependencias...[0m
     echo [93m[..] Esto puede tomar varios minutos (PyTorch ~3GB).[0m
     echo.
-    uv sync
+    "%UV%" sync
     if %ERRORLEVEL% neq 0 (
         echo [91m[ERROR] Fallo al instalar dependencias.[0m
         pause
@@ -38,10 +41,10 @@ if not exist ".venv" (
 )
 
 :: Ensure pywebview is installed
-uv run python -c "import webview" 2>nul
+"%UV%" run python -c "import webview" 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [93m[..] Instalando pywebview para modo desktop...[0m
-    uv add pywebview
+    "%UV%" add pywebview
     if %ERRORLEVEL% neq 0 (
         echo [91m[ERROR] Fallo al instalar pywebview.[0m
         pause
@@ -54,7 +57,7 @@ echo.
 echo [90mCierra la ventana para detener la aplicacion.[0m
 echo.
 
-uv run app.py --desktop
+"%UV%" run app.py --desktop
 
 if %ERRORLEVEL% neq 0 (
     echo.

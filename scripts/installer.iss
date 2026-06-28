@@ -59,9 +59,7 @@ SetupAppTitle=Qwen-Image-Edit
 SetupWindowTitle=Instalador de Qwen-Image-Edit - {#MyAppVersion}
 
 [Tasks]
-Name: "desktopicon"; Description: "Acceso directo en el escritorio (modo navegador)"; GroupDescription: "Accesos directos:"
-Name: "desktopicon_desktop"; Description: "Acceso directo en el escritorio (modo ventana nativa)"; GroupDescription: "Accesos directos:"
-Name: "startmenu"; Description: "Crear acceso en el menú Inicio"; GroupDescription: "Accesos directos:"
+; Empty - icons are created unconditionally below
 
 [Files]
 ; Source code
@@ -89,11 +87,12 @@ Source: "..\run_desktop.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "check_python.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExec}"; WorkingDir: "{app}"; Tasks: startmenu
-Name: "{autodesktop}\{#MyAppName} (Navegador)"; Filename: "{app}\{#MyAppExec}"; WorkingDir: "{app}"; Tasks: desktopicon
-Name: "{autodesktop}\{#MyAppName} (Ventana Nativa)"; Filename: "{app}\run_desktop.bat"; WorkingDir: "{app}"; Tasks: desktopicon_desktop; IconFilename: "{app}\icon.ico"
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExec}"; WorkingDir: "{app}"
+Name: "{autoprograms}\{#MyAppName} (Ventana Nativa)"; Filename: "{app}\run_desktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExec}"; WorkingDir: "{app}"
+Name: "{autodesktop}\{#MyAppName} (Ventana Nativa)"; Filename: "{app}\run_desktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
 ; Uninstall
-Name: "{autoprograms}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; Tasks: startmenu
+Name: "{autoprograms}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Run]
 ; Run the app after install (user checkbox)
