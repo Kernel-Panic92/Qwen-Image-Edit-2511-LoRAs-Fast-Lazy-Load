@@ -106,8 +106,8 @@ print(f"Transformer dtype: {transformer.dtype}")
 pipe = QwenImageEditPlusPipeline.from_pretrained(
     str(PIPELINE_DIR),
     transformer=transformer,
+    torch_dtype=torch.float16,
 )
-print(f"Pipeline dtype: {pipe.dtype}")
 
 if torch.cuda.is_available():
     pipe.enable_sequential_cpu_offload()
