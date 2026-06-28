@@ -62,16 +62,18 @@ if not exist ".venv" (
     echo.
 )
 
-echo [OK] Iniciando aplicacion...
+echo [OK] Iniciando servidor...
 echo [%date% %time%] Iniciando app.py >> "%LOG%"
 echo.
-echo Abre http://localhost:7860 en tu navegador
-echo Presiona Ctrl+C para cerrar.
+echo Abriendo http://localhost:7860 en tu navegador...
+echo Presiona Ctrl+C para cerrar el servidor.
 echo.
 
-"%UV%" run app.py >> "%LOG%" 2>&1
+:: Run app - output visible in terminal
+"%UV%" run app.py
 
-echo [%date% %time%] app.py termino con codigo: %ERRORLEVEL% >> "%LOG%"
+set "EXIT_CODE=%ERRORLEVEL%"
+echo [%date% %time%] app.py termino con codigo: %EXIT_CODE% >> "%LOG%"
 echo.
-echo [INFO] La aplicacion se cerro. Revisa el log: %LOG%
+echo [INFO] El servidor se detuvo (codigo: %EXIT_CODE%).
 pause
