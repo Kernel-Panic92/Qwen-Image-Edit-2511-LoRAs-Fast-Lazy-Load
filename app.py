@@ -100,6 +100,7 @@ else:
 print("Loading transformer...")
 transformer = QwenImageTransformer2DModel.from_pretrained(
     str(TRANSFORMER_DIR),
+    torch_dtype=torch.float16,
 )
 print(f"Transformer dtype: {transformer.dtype}")
 
