@@ -68,6 +68,42 @@ from qwenimage.pipeline_qwenimage_edit_plus import QwenImageEditPlusPipeline
 from qwenimage.transformer_qwenimage import QwenImageTransformer2DModel
 from qwenimage.qwen_fa3_processor import QwenDoubleStreamAttnProcessorFA3
 
+# ── Diagnostic: test file I/O before model loading ───────────────────────
+if IS_PACKAGED:
+    print("─" * 60)
+    print("FILE I/O DIAGNOSTIC")
+    print("─" * 60)
+    hub_cache = hf_cache / "hub"
+    hub_cache.mkdir(parents=True, exist_ok=True)
+
+    # Test 1: basic write/read
+    test_path = hub_cache / "test_io.txt"
+    try:
+        test_path.write_text("hello", encoding="utf-8")
+        content = test_path.read_text(encoding="utf-8")
+        print(f"  Basic I/O: OK ('{content}')")
+        test_path.unlink()
+    except Exception as e:
+        print(f"  Basic I/O: FAILED ({e})")
+
+    # Test 2: check downloaded config.json
+    config_candidates = list(hub_cache.glob("models--*/snapshots/*/config.json"))
+    for cp in config_candidates:
+        print(f"  Found: {cp}")
+        print(f"    Exists: {cp.exists()}")
+        print(f"    Is file: {cp.is_file()}")
+        print(f"    Is symlink: {cp.is_symlink()}")
+        print(f"    Size: {cp.stat().st_size if cp.exists() else 'N/A'}")
+        if cp.is_symlink():
+            print(f"    Symlink target: {os.readlink(cp)}")
+            print(f"    Target exists: {cp.resolve().exists()}")
+        try:
+            with open(str(cp), "r", encoding="utf-8") as f:
+                print(f"    open() OK: {f.read(50)}")
+        except Exception as e:
+            print(f"    open() FAILED: {type(e).__name__}: {e}")
+    print("─" * 60)
+
 if torch.cuda.is_available():
     cap = torch.cuda.get_device_capability()
     dtype = torch.float16 if cap[0] < 8 else torch.bfloat16
